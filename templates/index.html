@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OSINT Recon Tool - Finder tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map { height: 400px; }
+    body {
+      background-color: #212529;
+      color: #f8f9fa;
+    }
+    .container {
+      max-width: 800px;
+      padding: 20px;
+      margin-top: 30px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .card {
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .card-header {
+      background-color: #343a40;
+      color: #f8f9fa;
+      font-weight: bold;
+    }
+    .card-body {
+      background-color: #495057;
+      color: #f8f9fa;
+    }
+    .alert {
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .form-control {
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary {
+      background-color: #007bff;
+      border-color: #007bff;
+      border-radius: 10px;
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+    .btn {
+      font-size: 14px;
+      padding: 8px 15px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container mt-5">
+  <h2>Finder tool</h2>
+  <form method="post" class="mb-4">
+    <input name="query" type="text" class="form-control" placeholder="Enter domain, IP, or phone number" required>
+    <button class="btn btn-primary mt-2">Scan</button>
+  </form>
+
+  {% if data and not data.error %}
+  <div class="card text-dark mb-4">
+    <div class="card-header">Shodan Result</div>
+    <div class="card-body">
+      <p><strong>IP:</strong> {{ data.ip }}</p>
+      <p><strong>Org:</strong> {{ data.org }}</p>
+      <p><strong>OS:</strong> {{ data.os }}</p>
+      {% if data.location and data.location.city %}
+        <p><strong>Location:</strong> {{ data.location.city }}, {{ data.location.country_name }}</p>
+      {% else %}
+        <p><strong>Location:</strong> Not Available</p>
+      {% endif %}
+      <p><strong>Open Ports:</strong> {{ data.ports | join(', ') }}</p>
+      <p><strong>Subdomains:</strong> {{ data.domains | join(', ') }}</p>
+    </div>
+  </div>
+  {% elif data and data.error %}
+  <div class="alert alert-danger">Error: {{ data.error }}</div>
+  {% endif %}
+
+  {% if data and data.location and data.location.latitude and data.location.longitude %}
+  <div class="card text-dark mb-4">
+    <div class="card-header">Map</div>
+    <div class="card-body">
+      <div id="map"></div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if phone and not phone.error %}
+  <div class="card text-dark mb-4">
+    <div class="card-header">Phone Info</div>
+    <div class="card-body">
+      <p><strong>Number:</strong> {{ phone.international_format }}</p>
+      <p><strong>Country:</strong> {{ phone.country_name }}</p>
+      <p><strong>Location:</strong> {{ phone.location }}</p>
+      <p><strong>Carrier:</strong> {{ phone.carrier }}</p>
+      <p><strong>Line Type:</strong> {{ phone.line_type }}</p>
+    </div>
+  </div>
+  {% elif phone and phone.error %}
+  <div class="alert alert-danger">Error: {{ phone.error }}</div>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% if data and data.location and data.location.latitude and data.location.longitude %}
+<script>
+  const map = L.map('map').setView([{{ data.location.latitude }}, {{ data.location.longitude }}], 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  L.marker([{{ data.location.latitude }}, {{ data.location.longitude }}]).addTo(map)
+    .bindPopup("IP: {{ data.ip }}").openPopup();
+</script>
+{% endif %}
+</body>
+</html>
