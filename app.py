@@ -7,7 +7,7 @@ from phonenumbers import geocoder, carrier
 app = Flask(__name__)
 
 # 🛑 Replace with your real Shodan API key here
-SHODAN_API_KEY = "bKZouw8g1PzXnC99dVkh62ASYbxtieU6"
+SHODAN_API_KEY = "Your shodan api key"
 
 def get_ip(domain_or_ip):
     try:
